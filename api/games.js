@@ -43,19 +43,23 @@ module.exports = async function handler(req, res) {
     // Diagnostikas režīms: atdod, ko tieši funkcija ierauga avota lapā.
     // Atver <tava-lapa>/api/games?debug=1 un atsūti šo, lai varu salabot parsēšanu.
     if (debug) {
+      const flight = extractFlight(html);
+      const kwRe =
+        /Atvērt|Mārkalnes|Jugla|"location|"arena|"venue|"place|start|"players|"maxPlayers|"capacity|"slots|"registrations|"applications|"price|"cost|"title|"name/i;
+      const kw = flight.search(kwRe);
       res.setHeader('Cache-Control', 'no-store');
       res.status(200).json({
         source: SOURCE_URL,
         updated: new Date().toISOString(),
         htmlLength: html.length,
-        markers_PieteiktiesUz: (html.match(/Pieteikties\s+uz/gi) || []).length,
-        word_Pieteikties: (html.match(/Pieteikties/gi) || []).length,
-        word_Atverts: (html.match(/Atvērts|Atvērta|Atvērtā/gi) || []).length,
-        hasNextData: /id="__NEXT_DATA__"/i.test(html),
-        hasNuxt: /window\.__NUXT__|id="__NUXT_DATA__"/i.test(html),
-        jsonScripts: (html.match(/type="application\/json"/gi) || []).length,
-        parsedCount: parseGames(html).length,
-        htmlSnippet: html.slice(0, 60000),
+        flightLength: flight.length,
+        flightKeywordAt: kw,
+        word_Atverts: (flight.match(/Atvērt/gi) || []).length,
+        // Fragments ap pirmo spēles datu atslēgvārdu — parāda JSON struktūru.
+        flightSample:
+          kw >= 0
+            ? flight.slice(Math.max(0, kw - 600), kw + 7000)
+            : flight.slice(0, 7000),
       });
       return;
     }
@@ -95,6 +99,22 @@ module.exports = async function handler(req, res) {
 };
 
 // --- Tīkls ---------------------------------------------------------------
+
+// Next.js App Router straumē datus ar self.__next_f.push([1,"...chunk..."]).
+// Savācam visus tekstu gabalus un atkodējam tos vienā virknē.
+function extractFlight(html) {
+  const re = /self\.__next_f\.push\(\[\s*\d+\s*,\s*"((?:[^"\\]|\\.)*)"\s*\]\)/g;
+  let m;
+  let out = '';
+  while ((m = re.exec(html)) !== null) {
+    try {
+      out += JSON.parse('"' + m[1] + '"');
+    } catch (_) {
+      out += m[1];
+    }
+  }
+  return out;
+}
 
 function getQuery(req) {
   if (req.query && typeof req.query === 'object') return req.query;
