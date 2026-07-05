@@ -297,54 +297,130 @@
 
       .games {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-        gap: 12px;
+        grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+        gap: 16px;
       }
 
       .game {
+        display: flex;
+        flex-direction: column;
         background: var(--bg-elev);
         border: 1px solid var(--border);
-        border-radius: 12px;
-        padding: 14px 16px;
-        text-decoration: none;
+        border-radius: 16px;
         color: var(--text);
-        display: block;
-        transition: border-color 0.15s, transform 0.05s;
+        text-decoration: none;
+        overflow: hidden;
+        transition: border-color 0.15s, transform 0.06s, box-shadow 0.15s;
       }
 
       a.game:hover {
         border-color: var(--accent);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+      }
+
+      a.game:hover .game-apply {
+        background: var(--accent);
+        color: #08101d;
+      }
+
+      a.game:hover .game-apply .arrow {
+        transform: translateX(4px);
       }
 
       a.game:active {
         transform: translateY(1px);
       }
 
-      .game .title {
-        font-weight: 600;
-        font-size: 15px;
-        margin-bottom: 8px;
+      .game-top {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 18px 18px 0;
+      }
+
+      .game-title {
+        font-weight: 700;
+        font-size: 19px;
+        line-height: 1.25;
         word-break: break-word;
       }
 
-      .game .fields {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 6px;
-      }
-
-      .game .field {
+      .game-badge {
+        flex: 0 0 auto;
         font-size: 12px;
-        color: var(--muted);
-        background: var(--bg-soft);
-        border: 1px solid var(--border);
-        padding: 2px 8px;
+        font-weight: 700;
+        color: #08101d;
+        background: var(--green);
+        padding: 4px 12px;
         border-radius: 999px;
+        white-space: nowrap;
       }
 
-      .game .field b {
-        color: var(--text);
+      .game-rows {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        padding: 16px 18px 6px;
+      }
+
+      .game-row {
+        display: flex;
+        align-items: center;
+        gap: 11px;
+        font-size: 14.5px;
+        word-break: break-word;
+      }
+
+      .game-row .ic {
+        flex: 0 0 20px;
+        width: 20px;
+        height: 20px;
+        display: grid;
+        place-items: center;
+        color: var(--muted);
+        font-weight: 700;
+        font-size: 15px;
+      }
+
+      .game-row .ic svg {
+        width: 17px;
+        height: 17px;
+      }
+
+      .game-until {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 4px 18px 16px;
+        font-size: 12.5px;
+        color: var(--muted);
+      }
+
+      .game-until svg {
+        width: 14px;
+        height: 14px;
+        flex: 0 0 14px;
+      }
+
+      .game-apply {
+        margin-top: auto;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 14px;
+        background: var(--bg-soft);
+        border-top: 1px solid var(--border);
         font-weight: 600;
+        font-size: 14px;
+        color: var(--accent);
+        transition: background 0.15s, color 0.15s;
+      }
+
+      .game-apply .arrow {
+        transition: transform 0.15s;
+        font-size: 16px;
       }
 
       .note {
@@ -634,7 +710,18 @@
       // Spēles no /api/games
       // =====================================================================
       const gamesBody = document.getElementById("games-body");
-      const PRIMARY_KEYS = ["title", "name", "nosaukums", "game", "spēle"];
+
+      // Ikonas (inline SVG — bez ārējiem resursiem).
+      const IC = {
+        date:
+          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>',
+        loc:
+          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>',
+        players:
+          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
+        clock:
+          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>',
+      };
 
       async function loadGames() {
         gamesBody.innerHTML =
@@ -660,7 +747,14 @@
       }
 
       function renderGames(data) {
-        const games = (data && data.games) || [];
+        const classified = ((data && data.games) || []).map(classify);
+        // Rādām tikai atvērtās spēles. Ja nevienai spēlei statuss nav
+        // nosakāms (parsēšana to nepaķēra), rādām visas kā rezervi.
+        const anyKnown = classified.some((g) => g.open !== null);
+        const games = anyKnown
+          ? classified.filter((g) => g.open === true)
+          : classified;
+
         if (!games.length) {
           gamesBody.innerHTML =
             '<div class="note">Šobrīd nav atvērtu spēļu.' +
@@ -669,46 +763,64 @@
           return;
         }
 
-        const cards = games
-          .map((g) => {
-            const title = pickTitle(g);
-            const fields = Object.entries(g)
-              .filter(
-                ([k, v]) =>
-                  k !== "url" &&
-                  !PRIMARY_KEYS.includes(k.toLowerCase()) &&
-                  v !== "" &&
-                  v != null
-              )
-              .map(
-                ([k, v]) =>
-                  '<span class="field"><b>' +
-                  escapeHtml(prettyKey(k)) +
-                  ":</b> " +
-                  escapeHtml(String(v)) +
-                  "</span>"
-              )
-              .join("");
-
-            const inner =
-              '<div class="title">' +
-              escapeHtml(title) +
-              '</div><div class="fields">' +
-              fields +
-              "</div>";
-
-            return g.url
-              ? '<a class="game" href="' +
-                  escapeAttr(g.url) +
-                  '" target="_blank" rel="noopener">' +
-                  inner +
-                  "</a>"
-              : '<div class="game">' + inner + "</div>";
-          })
-          .join("");
-
         gamesBody.innerHTML =
-          '<div class="games">' + cards + "</div>" + metaLine(data);
+          '<div class="games">' +
+          games.map(card).join("") +
+          "</div>" +
+          metaLine(data);
+      }
+
+      // Uzzīmē vienu spēles kartīti (līdzīgi kā lt.gnl.lv).
+      function card(g) {
+        const rows = [];
+        if (g.price) rows.push(row('<span class="ic">€</span>', g.price));
+        if (g.date) rows.push(row('<span class="ic">' + IC.date + "</span>", g.date));
+        if (g.location)
+          rows.push(row('<span class="ic">' + IC.loc + "</span>", g.location));
+        if (g.players)
+          rows.push(row('<span class="ic">' + IC.players + "</span>", g.players));
+
+        const badge = g.open ? '<span class="game-badge">Atvērts</span>' : "";
+        const until = g.openUntil
+          ? '<div class="game-until">' +
+            IC.clock +
+            "<span>Pieteikums atvērts līdz " +
+            escapeHtml(g.openUntil) +
+            "</span></div>"
+          : "";
+        const apply = g.url
+          ? '<div class="game-apply">Pieteikties <span class="arrow">→</span></div>'
+          : "";
+
+        const inner =
+          '<div class="game-top"><div class="game-title">' +
+          escapeHtml(g.title || "Spēle") +
+          "</div>" +
+          badge +
+          "</div>" +
+          '<div class="game-rows">' +
+          rows.join("") +
+          "</div>" +
+          until +
+          apply;
+
+        return g.url
+          ? '<a class="game" href="' +
+              escapeAttr(g.url) +
+              '" target="_blank" rel="noopener">' +
+              inner +
+              "</a>"
+          : '<div class="game">' + inner + "</div>";
+      }
+
+      function row(icon, text) {
+        return (
+          '<div class="game-row">' +
+          icon +
+          "<span>" +
+          escapeHtml(text) +
+          "</span></div>"
+        );
       }
 
       function metaLine(data) {
@@ -717,25 +829,146 @@
         try {
           when = new Date(data.updated).toLocaleTimeString("lv-LV");
         } catch (_) {}
-        let s = '<div class="note" style="margin-top:12px">Atjaunināts ' + when;
+        let s = '<div class="note" style="margin-top:14px">Atjaunināts ' + when;
         if (data.stale) s += " (novecojuši dati — avots nesasniedzams)";
         else if (data.cached) s += " (no keša)";
         return s + "</div>";
       }
 
-      function pickTitle(g) {
-        for (const k of PRIMARY_KEYS) {
-          const hit = Object.keys(g).find((kk) => kk.toLowerCase() === k);
-          if (hit && g[hit]) return String(g[hit]);
-        }
-        const first = Object.entries(g).find(
-          ([k, v]) => k !== "url" && typeof v === "string" && v.trim()
-        );
-        return first ? String(first[1]) : "Spēle";
+      // --- Lauku atpazīšana ---------------------------------------------
+      // Strādā gan ar tīriem laukiem (iegultā JSON), gan ar brīvu tekstu
+      // (kad spēle atnāk kā viens teksta bloks). Katru lauku mēģina noteikt
+      // pēc atslēgas nosaukuma un/vai pēc vērtības formas.
+      const LV = "A-Za-z\\u00C0-\\u024F"; // latīņu burti ar diakritiku
+
+      function classify(g) {
+        const text = Object.entries(g)
+          .filter(([k]) => k !== "url")
+          .map(([, v]) => String(v))
+          .join("  ");
+        const status = matchStatus(g, text);
+        return {
+          url: g.url || null,
+          title: matchTitle(g, text),
+          status,
+          open: isOpen(status),
+          price: firstMatch(
+            text,
+            /(?:€|EUR)\s*\d+(?:[.,]\d{1,2})?|\d+(?:[.,]\d{1,2})?\s*(?:€|EUR)/i
+          ),
+          date: matchDate(text),
+          location: matchLocation(g, text),
+          players: matchPlayers(text),
+          openUntil: matchUntil(text),
+        };
       }
 
-      function prettyKey(k) {
-        return k.replace(/_/g, " ").replace(/^\w/, (c) => c.toUpperCase());
+      function isOpen(status) {
+        if (!status) return null;
+        if (/(slēg|sleg|aizvēr|aizver|pilns|full|clos|beidz)/i.test(status))
+          return false;
+        if (/(atvēr|atver|open)/i.test(status)) return true;
+        return null;
+      }
+
+      function matchStatus(g, text) {
+        const explicit = valueByKey(g, ["status", "state", "stāvoklis"]);
+        if (explicit) return explicit;
+        // Aizvērtos pārbaudām pirmos, lai virsraksts "Atvērtā spēle"
+        // slēgtai spēlei kļūdaini nepadara to par atvērtu.
+        if (/(slēgt|slegt|aizvēr|aizver|pilns|\bfull\b|closed|beidz)/i.test(text))
+          return "Slēgts";
+        if (/(atvērt|atvert|\bopen\b)/i.test(text)) return "Atvērts";
+        return null;
+      }
+
+      function matchTitle(g, text) {
+        const explicit = valueByKey(g, [
+          "title",
+          "name",
+          "nosaukums",
+          "heading",
+        ]);
+        if (explicit) return explicit;
+        // Virsraksts parasti ir tieši pirms cenas.
+        let m = text.match(
+          new RegExp(
+            "([" + LV + "][" + LV + " .\\-]{1,40}?)\\s*(?:€|EUR)(?![A-Za-z])"
+          )
+        );
+        if (m && m[1].trim().length > 1) return m[1].trim();
+        // Vai aiz "Pieteikties uz:".
+        m = text.match(
+          new RegExp("Pieteikties uz:?\\s*([" + LV + "][^\\d(]{1,40})", "i")
+        );
+        if (m && m[1].trim()) return m[1].replace(/\s+/g, " ").trim();
+        m = text.match(/Atvērtā?\s+spēle/i);
+        if (m) return m[0];
+        return null;
+      }
+
+      function matchLocation(g, text) {
+        const explicit = valueByKey(g, [
+          "location",
+          "vieta",
+          "arēna",
+          "arena",
+          "adrese",
+          "address",
+          "place",
+        ]);
+        if (explicit) return explicit;
+        const addr = "(?:iela|rīga|riga|novads|prospekts|bulvāris|gatve|laukums)";
+        // Vietas nosaukums + adrese iekavās, piem. "Jugla (Mārkalnes iela 10, Rīga)".
+        let m = text.match(
+          new RegExp(
+            "([" + LV + "][^\\s()]*)\\s*(\\([^)]*" + addr + "[^)]*\\))",
+            "i"
+          )
+        );
+        if (m) return (m[1] + " " + m[2]).replace(/\s+/g, " ").trim();
+        // Tikai adrese iekavās.
+        m = text.match(new RegExp("\\([^)]*" + addr + "[^)]*\\)", "i"));
+        if (m) return m[0].replace(/\s+/g, " ").trim();
+        return null;
+      }
+
+      function matchDate(text) {
+        // Izmetam "līdz <datums>", lai galvenais datums nesajaucas ar to.
+        const cleaned = text.replace(
+          /līdz\s+\d{1,4}[.\/-]\d{1,2}[.\/-]\d{1,4}(?:[ T]\d{1,2}:\d{2})?/gi,
+          " "
+        );
+        const m = cleaned.match(
+          /\d{1,4}[.\/-]\d{1,2}[.\/-]\d{1,4}(?:[ T]\d{1,2}:\d{2})?(?:\s*[-–]\s*\d{1,2}:\d{2})?/
+        );
+        return m ? m[0].replace(/\s+/g, " ").trim() : null;
+      }
+
+      function matchUntil(text) {
+        const m = text.match(
+          /līdz\s+(\d{1,4}[.\/-]\d{1,2}[.\/-]\d{1,4}(?:[ T]\d{1,2}:\d{2})?)/i
+        );
+        return m ? m[1].trim() : null;
+      }
+
+      function matchPlayers(text) {
+        const m = text.match(/\b(\d{1,3})\s*\/\s*(\d{1,3})(?!\s*[.\/-]?\d)/);
+        return m ? m[1] + " / " + m[2] : null;
+      }
+
+      function valueByKey(g, keys) {
+        for (const want of keys) {
+          const hit = Object.keys(g).find((k) => k.toLowerCase() === want);
+          if (hit && g[hit] != null && String(g[hit]).trim())
+            return String(g[hit]).trim();
+        }
+        return null;
+      }
+
+      function firstMatch(text, re) {
+        const m = text.match(re);
+        return m ? m[0].replace(/\s+/g, " ").trim() : null;
       }
 
       document

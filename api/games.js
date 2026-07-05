@@ -99,7 +99,12 @@ async function fetchHtml(url) {
 // Tā kā precīzais lapas HTML no izstrādes vides nebija pieejams, stratēģijas
 // ir apzināti "izturīgas" un vispārīgas.
 function parseGames(html) {
-  const strategies = [extractFromNextData, parseTable, parseRepeatedBlocks];
+  const strategies = [
+    extractFromNextData,
+    parseTable,
+    parseByMarkers,
+    parseRepeatedBlocks,
+  ];
   for (const strat of strategies) {
     try {
       const games = strat(html);
@@ -200,7 +205,56 @@ function getCells(rowHtml, cellRe) {
   return [...rowHtml.matchAll(cellRe)].map((m) => stripTags(m[0]));
 }
 
-// 3) Atkārtoti bloki. Meklējam elementus ar klasi, kas satur atslēgvārdus
+// 3) Marķieri. lt.gnl.lv kartītes sākas ar tekstu "Pieteikties uz:", tāpēc
+//    sadalām HTML pēc šī marķiera un no katra gabala izvelkam tekstu + saiti.
+//    Lauku atpazīšana notiek klienta pusē (index.html), tāpēc šeit pietiek
+//    ar visu kartītes tekstu vienā laukā.
+const STATUS_WORD =
+  '(Atvērts|Atvērta|Atvērtā|Slēgts|Slēgta|Slēgtā|Aizvērts|Aizvērta|Pilns|Notiek|Gaida|Beidzies|Open|Closed|Full)';
+
+function parseByMarkers(html) {
+  const markerRe = /Pieteikties\s+uz/gi;
+  const positions = [];
+  let mm;
+  while ((mm = markerRe.exec(html)) !== null) positions.push(mm.index);
+  if (!positions.length) return [];
+
+  const trailingBadge = new RegExp('\\s*' + STATUS_WORD + '\\s*$', 'i');
+  // Nozīmīte kā atsevišķs elementa teksts, piem. <span ...>Atvērts</span>.
+  const badgeEl = new RegExp('>\\s*' + STATUS_WORD + '\\s*<', 'gi');
+
+  const games = [];
+  for (let i = 0; i < positions.length; i++) {
+    const marker = positions[i];
+    // Kartītes ķermenis: no šīs kartītes marķiera līdz nākamajam.
+    const end =
+      i + 1 < positions.length
+        ? positions[i + 1]
+        : Math.min(html.length, marker + 4000);
+
+    let text = stripTags(html.slice(marker, end));
+    // Ķermeņa beigās parasti pielīp nākamās kartītes nozīmīte — nogriežam to.
+    text = text.replace(trailingBadge, '').trim();
+    if (text.length < 3) continue;
+
+    // Šīs kartītes nozīmīte atrodas PIRMS marķiera — meklējam tuvāko statusa
+    // elementu iepriekšējā gabalā (starp iepriekšējo un šo marķieri).
+    const before = html.slice(i > 0 ? positions[i - 1] : 0, marker);
+    const badges = [...before.matchAll(badgeEl)];
+    const badge = badges.length ? badges[badges.length - 1][1] : null;
+
+    // "raw" — pilns kartītes teksts lauku atpazīšanai klienta pusē.
+    const obj = { raw: (badge ? badge + ' ' : '') + text };
+    if (badge) obj.status = badge; // nepārprotams statuss no nozīmītes
+    // Saiti ("Pieteikties" poga) meklējam tikai no marķiera uz priekšu.
+    const link = html.slice(marker, end).match(/href="([^"]+)"/i);
+    if (link) obj.url = absoluteUrl(link[1]);
+    games.push(obj);
+  }
+  return games;
+}
+
+// 4) Atkārtoti bloki. Meklējam elementus ar klasi, kas satur atslēgvārdus
 //    (application, game, event, card, row, item) un no katra izvelkam tekstu.
 function parseRepeatedBlocks(html) {
   const body = html.replace(/<(script|style|head)[\s\S]*?<\/\1>/gi, ' ');
@@ -214,7 +268,7 @@ function parseRepeatedBlocks(html) {
     const text = stripTags(inner);
     if (!text || text.length < 3) continue;
 
-    const obj = { title: text };
+    const obj = { raw: text };
     const link = inner.match(/href="([^"]+)"/i);
     if (link) obj.url = absoluteUrl(link[1]);
     games.push(obj);
