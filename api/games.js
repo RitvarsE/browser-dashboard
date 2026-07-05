@@ -25,8 +25,13 @@ module.exports = async function handler(req, res) {
     return;
   }
 
+  // Karodziņi no URL: ?fresh=1 (apiet kešu), ?debug=1 (diagnostika).
+  const q = getQuery(req);
+  const debug = 'debug' in q;
+  const fresh = debug || 'fresh' in q;
+
   const now = Date.now();
-  if (cache.payload && now - cache.at < CACHE_MS) {
+  if (!fresh && cache.payload && now - cache.at < CACHE_MS) {
     res.setHeader('Cache-Control', 'public, max-age=60, s-maxage=300');
     res.status(200).json({ ...cache.payload, cached: true });
     return;
@@ -34,6 +39,27 @@ module.exports = async function handler(req, res) {
 
   try {
     const html = await fetchHtml(SOURCE_URL);
+
+    // Diagnostikas režīms: atdod, ko tieši funkcija ierauga avota lapā.
+    // Atver <tava-lapa>/api/games?debug=1 un atsūti šo, lai varu salabot parsēšanu.
+    if (debug) {
+      res.setHeader('Cache-Control', 'no-store');
+      res.status(200).json({
+        source: SOURCE_URL,
+        updated: new Date().toISOString(),
+        htmlLength: html.length,
+        markers_PieteiktiesUz: (html.match(/Pieteikties\s+uz/gi) || []).length,
+        word_Pieteikties: (html.match(/Pieteikties/gi) || []).length,
+        word_Atverts: (html.match(/Atvērts|Atvērta|Atvērtā/gi) || []).length,
+        hasNextData: /id="__NEXT_DATA__"/i.test(html),
+        hasNuxt: /window\.__NUXT__|id="__NUXT_DATA__"/i.test(html),
+        jsonScripts: (html.match(/type="application\/json"/gi) || []).length,
+        parsedCount: parseGames(html).length,
+        htmlSnippet: html.slice(0, 60000),
+      });
+      return;
+    }
+
     const games = parseGames(html);
 
     const payload = {
@@ -69,6 +95,17 @@ module.exports = async function handler(req, res) {
 };
 
 // --- Tīkls ---------------------------------------------------------------
+
+function getQuery(req) {
+  if (req.query && typeof req.query === 'object') return req.query;
+  try {
+    return Object.fromEntries(
+      new URL(req.url, 'http://localhost').searchParams
+    );
+  } catch (_) {
+    return {};
+  }
+}
 
 async function fetchHtml(url) {
   const controller = new AbortController();

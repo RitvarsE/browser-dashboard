@@ -1227,11 +1227,13 @@
           '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>',
       };
 
-      async function loadGames() {
+      async function loadGames(manual) {
         gamesBody.innerHTML =
           '<div class="note"><span class="spin"></span> Ielādē…</div>';
         try {
-          const resp = await fetch("/api/games", { cache: "no-store" });
+          // Poga "Atsvaidzināt" apiet kešu (?fresh=1), lai dati un laiks mainās.
+          const url = manual ? "/api/games?fresh=1" : "/api/games";
+          const resp = await fetch(url, { cache: "no-store" });
           if (!resp.ok) throw new Error("HTTP " + resp.status);
           const data = await resp.json();
           renderGames(data);
@@ -1333,9 +1335,14 @@
         try {
           when = new Date(data.updated).toLocaleTimeString("lv-LV");
         } catch (_) {}
-        let s = '<div class="note" style="margin-top:14px">Atjaunināts ' + when;
-        if (data.stale) s += " (novecojuši dati — avots nesasniedzams)";
-        else if (data.cached) s += " (no keša)";
+        let checked = "";
+        try {
+          checked = new Date().toLocaleTimeString("lv-LV");
+        } catch (_) {}
+        let s = '<div class="note" style="margin-top:14px">Dati no ' + when;
+        if (data.stale) s += " (novecojuši — avots nesasniedzams)";
+        else if (data.cached) s += " (kešs)";
+        if (checked) s += " · pārbaudīts " + checked;
         return s + "</div>";
       }
 
@@ -1477,10 +1484,10 @@
 
       document
         .getElementById("games-refresh")
-        .addEventListener("click", loadGames);
+        .addEventListener("click", () => loadGames(true));
       loadGames();
       if (GAMES_AUTO_REFRESH_MS > 0) {
-        setInterval(loadGames, GAMES_AUTO_REFRESH_MS);
+        setInterval(() => loadGames(false), GAMES_AUTO_REFRESH_MS);
       }
 
       // =====================================================================
