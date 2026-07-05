@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="lv">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mana cilne</title>
+    <style>
+      :root {
+        --bg: #0d1117;
+        --bg-soft: #161b22;
+        --bg-elev: #1c2230;
+        --border: #262c39;
+        --text: #e6edf3;
+        --muted: #8b949e;
+        --accent: #58a6ff;
+        --accent-soft: rgba(88, 166, 255, 0.14);
+        --green: #3fb950;
+        --danger: #f85149;
+        --radius: 14px;
+        --shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        min-height: 100vh;
+        background: radial-gradient(
+            1200px 600px at 80% -10%,
+            rgba(88, 166, 255, 0.08),
+            transparent 60%
+          ),
+          var(--bg);
+        color: var(--text);
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          Helvetica, Arial, sans-serif;
+        line-height: 1.5;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      .wrap {
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 40px 24px 64px;
+      }
+
+      /* --- Augšdaļa: pulkstenis --- */
+      header {
+        text-align: center;
+        margin-bottom: 44px;
+      }
+
+      #clock {
+        font-size: clamp(48px, 12vw, 92px);
+        font-weight: 700;
+        letter-spacing: 2px;
+        font-variant-numeric: tabular-nums;
+        line-height: 1;
+      }
+
+      #clock .sec {
+        color: var(--accent);
+      }
+
+      #date {
+        margin-top: 10px;
+        color: var(--muted);
+        font-size: 17px;
+        text-transform: capitalize;
+      }
+
+      #greeting {
+        margin-top: 4px;
+        color: var(--muted);
+        font-size: 14px;
+      }
+
+      /* --- Režģis --- */
+      .grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+      }
+
+      @media (max-width: 820px) {
+        .grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      .card {
+        background: var(--bg-soft);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 20px 22px;
+        box-shadow: var(--shadow);
+      }
+
+      .card h2 {
+        margin: 0 0 16px;
+        font-size: 15px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: var(--muted);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+      }
+
+      .card h2 .badge {
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: none;
+        letter-spacing: 0;
+        color: var(--accent);
+        background: var(--accent-soft);
+        padding: 2px 9px;
+        border-radius: 999px;
+      }
+
+      /* --- Saites --- */
+      .links {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+        gap: 10px;
+      }
+
+      .links a {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 11px 13px;
+        background: var(--bg-elev);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        color: var(--text);
+        text-decoration: none;
+        font-size: 14px;
+        font-weight: 500;
+        transition: border-color 0.15s, transform 0.05s, background 0.15s;
+      }
+
+      .links a:hover {
+        border-color: var(--accent);
+        background: #202634;
+      }
+
+      .links a:active {
+        transform: translateY(1px);
+      }
+
+      .links a .ico {
+        width: 22px;
+        height: 22px;
+        flex: 0 0 22px;
+        border-radius: 6px;
+        display: grid;
+        place-items: center;
+        font-size: 13px;
+        font-weight: 700;
+        background: var(--accent-soft);
+        color: var(--accent);
+      }
+
+      /* --- To-do --- */
+      .todo-input {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 14px;
+      }
+
+      .todo-input input {
+        flex: 1;
+        background: var(--bg-elev);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        color: var(--text);
+        padding: 10px 12px;
+        font-size: 14px;
+        outline: none;
+      }
+
+      .todo-input input:focus {
+        border-color: var(--accent);
+      }
+
+      .todo-input button {
+        background: var(--accent);
+        color: #08101d;
+        border: none;
+        border-radius: 10px;
+        padding: 0 16px;
+        font-size: 20px;
+        font-weight: 700;
+        cursor: pointer;
+        line-height: 1;
+      }
+
+      .todo-input button:hover {
+        filter: brightness(1.08);
+      }
+
+      ul.todo {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      ul.todo li {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 9px 11px;
+        background: var(--bg-elev);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        font-size: 14px;
+      }
+
+      ul.todo li input[type="checkbox"] {
+        appearance: none;
+        width: 18px;
+        height: 18px;
+        flex: 0 0 18px;
+        border: 2px solid var(--muted);
+        border-radius: 5px;
+        cursor: pointer;
+        position: relative;
+      }
+
+      ul.todo li input[type="checkbox"]:checked {
+        background: var(--green);
+        border-color: var(--green);
+      }
+
+      ul.todo li input[type="checkbox"]:checked::after {
+        content: "✓";
+        position: absolute;
+        inset: 0;
+        display: grid;
+        place-items: center;
+        color: #08101d;
+        font-size: 12px;
+        font-weight: 800;
+      }
+
+      ul.todo li .txt {
+        flex: 1;
+        word-break: break-word;
+      }
+
+      ul.todo li.done .txt {
+        color: var(--muted);
+        text-decoration: line-through;
+      }
+
+      ul.todo li .del {
+        background: none;
+        border: none;
+        color: var(--muted);
+        cursor: pointer;
+        font-size: 16px;
+        opacity: 0;
+        transition: opacity 0.15s, color 0.15s;
+      }
+
+      ul.todo li:hover .del {
+        opacity: 1;
+      }
+
+      ul.todo li .del:hover {
+        color: var(--danger);
+      }
+
+      .empty {
+        color: var(--muted);
+        font-size: 14px;
+        padding: 6px 2px;
+      }
+
+      /* --- Spēles --- */
+      .games-card {
+        grid-column: 1 / -1;
+      }
+
+      .games {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+        gap: 12px;
+      }
+
+      .game {
+        background: var(--bg-elev);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 14px 16px;
+        text-decoration: none;
+        color: var(--text);
+        display: block;
+        transition: border-color 0.15s, transform 0.05s;
+      }
+
+      a.game:hover {
+        border-color: var(--accent);
+      }
+
+      a.game:active {
+        transform: translateY(1px);
+      }
+
+      .game .title {
+        font-weight: 600;
+        font-size: 15px;
+        margin-bottom: 8px;
+        word-break: break-word;
+      }
+
+      .game .fields {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+
+      .game .field {
+        font-size: 12px;
+        color: var(--muted);
+        background: var(--bg-soft);
+        border: 1px solid var(--border);
+        padding: 2px 8px;
+        border-radius: 999px;
+      }
+
+      .game .field b {
+        color: var(--text);
+        font-weight: 600;
+      }
+
+      .note {
+        color: var(--muted);
+        font-size: 14px;
+        padding: 8px 2px;
+      }
+
+      .note code {
+        background: var(--bg-elev);
+        padding: 1px 6px;
+        border-radius: 6px;
+        color: var(--accent);
+      }
+
+      .spin {
+        display: inline-block;
+        width: 14px;
+        height: 14px;
+        border: 2px solid var(--border);
+        border-top-color: var(--accent);
+        border-radius: 50%;
+        animation: spin 0.7s linear infinite;
+        vertical-align: -2px;
+      }
+
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      .refresh {
+        background: none;
+        border: 1px solid var(--border);
+        color: var(--muted);
+        border-radius: 8px;
+        padding: 3px 10px;
+        font-size: 12px;
+        cursor: pointer;
+        text-transform: none;
+        letter-spacing: 0;
+        font-weight: 500;
+      }
+
+      .refresh:hover {
+        border-color: var(--accent);
+        color: var(--accent);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <header>
+        <div id="clock">--:--</div>
+        <div id="date"></div>
+        <div id="greeting"></div>
+      </header>
+
+      <div class="grid">
+        <!-- Saites -->
+        <section class="card">
+          <h2>Saites</h2>
+          <nav class="links" id="links"></nav>
+        </section>
+
+        <!-- To-do -->
+        <section class="card">
+          <h2>
+            Darāmais
+            <span class="badge" id="todo-count">0</span>
+          </h2>
+          <div class="todo-input">
+            <input
+              id="todo-text"
+              type="text"
+              placeholder="Pievieno uzdevumu…"
+              autocomplete="off"
+            />
+            <button id="todo-add" title="Pievienot">+</button>
+          </div>
+          <ul class="todo" id="todo-list"></ul>
+        </section>
+
+        <!-- Spēles -->
+        <section class="card games-card">
+          <h2>
+            Atvērtās spēles
+            <button class="refresh" id="games-refresh">Atsvaidzināt</button>
+          </h2>
+          <div id="games-body">
+            <div class="note"><span class="spin"></span> Ielādē…</div>
+          </div>
+        </section>
+      </div>
+    </div>
+
+    <script>
+      // =====================================================================
+      // Konfigurācija — pielāgo šeit
+      // =====================================================================
+      const LINKS = [
+        { name: "GNL LT", url: "https://lt.gnl.lv/applications", icon: "🎯" },
+        { name: "Gmail", url: "https://mail.google.com", icon: "✉️" },
+        { name: "Kalendārs", url: "https://calendar.google.com", icon: "📅" },
+        { name: "GitHub", url: "https://github.com", icon: "🐙" },
+        { name: "YouTube", url: "https://youtube.com", icon: "▶️" },
+        { name: "ChatGPT", url: "https://chat.openai.com", icon: "🤖" },
+      ];
+
+      // Cik bieži pašatjaunināt spēļu paneli (ms). 0 = izslēgts.
+      const GAMES_AUTO_REFRESH_MS = 5 * 60 * 1000;
+
+      // =====================================================================
+      // Pulkstenis
+      // =====================================================================
+      const clockEl = document.getElementById("clock");
+      const dateEl = document.getElementById("date");
+      const greetEl = document.getElementById("greeting");
+      const DAYS = [
+        "svētdiena",
+        "pirmdiena",
+        "otrdiena",
+        "trešdiena",
+        "ceturtdiena",
+        "piektdiena",
+        "sestdiena",
+      ];
+      const MONTHS = [
+        "janvārī",
+        "februārī",
+        "martā",
+        "aprīlī",
+        "maijā",
+        "jūnijā",
+        "jūlijā",
+        "augustā",
+        "septembrī",
+        "oktobrī",
+        "novembrī",
+        "decembrī",
+      ];
+
+      function pad(n) {
+        return String(n).padStart(2, "0");
+      }
+
+      function tick() {
+        const now = new Date();
+        clockEl.innerHTML =
+          pad(now.getHours()) +
+          ":" +
+          pad(now.getMinutes()) +
+          '<span class="sec">:' +
+          pad(now.getSeconds()) +
+          "</span>";
+        dateEl.textContent =
+          DAYS[now.getDay()] +
+          ", " +
+          now.getDate() +
+          ". " +
+          MONTHS[now.getMonth()];
+        const h = now.getHours();
+        greetEl.textContent =
+          h < 6
+            ? "Labu nakti 🌙"
+            : h < 12
+            ? "Labrīt ☀️"
+            : h < 18
+            ? "Labdien 👋"
+            : "Labvakar 🌆";
+      }
+      tick();
+      setInterval(tick, 1000);
+
+      // =====================================================================
+      // Saites
+      // =====================================================================
+      (function renderLinks() {
+        const el = document.getElementById("links");
+        el.innerHTML = LINKS.map((l) => {
+          const ico = l.icon
+            ? l.icon
+            : (l.name || "?").trim().charAt(0).toUpperCase();
+          return (
+            '<a href="' +
+            escapeAttr(l.url) +
+            '"><span class="ico">' +
+            escapeHtml(ico) +
+            "</span>" +
+            escapeHtml(l.name || l.url) +
+            "</a>"
+          );
+        }).join("");
+      })();
+
+      // =====================================================================
+      // To-do (glabājas pārlūkā ar localStorage)
+      // =====================================================================
+      const STORE_KEY = "dashboard.todos.v1";
+      const listEl = document.getElementById("todo-list");
+      const countEl = document.getElementById("todo-count");
+      const inputEl = document.getElementById("todo-text");
+
+      let todos = loadTodos();
+
+      function loadTodos() {
+        try {
+          const raw = localStorage.getItem(STORE_KEY);
+          const parsed = raw ? JSON.parse(raw) : [];
+          return Array.isArray(parsed) ? parsed : [];
+        } catch (_) {
+          return [];
+        }
+      }
+
+      function saveTodos() {
+        try {
+          localStorage.setItem(STORE_KEY, JSON.stringify(todos));
+        } catch (_) {
+          /* privātais režīms u.tml. — klusi ignorējam */
+        }
+      }
+
+      function renderTodos() {
+        const remaining = todos.filter((t) => !t.done).length;
+        countEl.textContent = remaining;
+        if (!todos.length) {
+          listEl.innerHTML =
+            '<div class="empty">Nav uzdevumu. Diena brīva! 🎉</div>';
+          return;
+        }
+        listEl.innerHTML = todos
+          .map(
+            (t, i) =>
+              '<li class="' +
+              (t.done ? "done" : "") +
+              '">' +
+              '<input type="checkbox" data-i="' +
+              i +
+              '"' +
+              (t.done ? " checked" : "") +
+              " />" +
+              '<span class="txt">' +
+              escapeHtml(t.text) +
+              "</span>" +
+              '<button class="del" data-i="' +
+              i +
+              '" title="Dzēst">✕</button>' +
+              "</li>"
+          )
+          .join("");
+      }
+
+      function addTodo() {
+        const text = inputEl.value.trim();
+        if (!text) return;
+        todos.push({ text, done: false });
+        inputEl.value = "";
+        saveTodos();
+        renderTodos();
+      }
+
+      document.getElementById("todo-add").addEventListener("click", addTodo);
+      inputEl.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") addTodo();
+      });
+
+      listEl.addEventListener("click", (e) => {
+        const i = e.target.getAttribute("data-i");
+        if (i === null) return;
+        const idx = Number(i);
+        if (e.target.matches(".del")) {
+          todos.splice(idx, 1);
+        } else if (e.target.matches('input[type="checkbox"]')) {
+          todos[idx].done = !todos[idx].done;
+        } else {
+          return;
+        }
+        saveTodos();
+        renderTodos();
+      });
+
+      renderTodos();
+
+      // =====================================================================
+      // Spēles no /api/games
+      // =====================================================================
+      const gamesBody = document.getElementById("games-body");
+      const PRIMARY_KEYS = ["title", "name", "nosaukums", "game", "spēle"];
+
+      async function loadGames() {
+        gamesBody.innerHTML =
+          '<div class="note"><span class="spin"></span> Ielādē…</div>';
+        try {
+          const resp = await fetch("/api/games", { cache: "no-store" });
+          if (!resp.ok) throw new Error("HTTP " + resp.status);
+          const data = await resp.json();
+          renderGames(data);
+        } catch (err) {
+          // Lokāli (file://) vai bez izvietotās funkcijas /api/games nedarbojas.
+          const local = location.protocol === "file:";
+          gamesBody.innerHTML =
+            '<div class="note">' +
+            (local
+              ? "Spēļu panelis darbojas tikai izvietotā vidē (Vercel), " +
+                "jo tam vajadzīga <code>/api/games</code> funkcija. " +
+                "Lokāli atverot failu, dati netiek ielādēti."
+              : "Neizdevās ielādēt spēles no <code>/api/games</code>. " +
+                "Pēc izvietošanas atver <code>/api/games</code> un pārbaudi JSON.") +
+            "</div>";
+        }
+      }
+
+      function renderGames(data) {
+        const games = (data && data.games) || [];
+        if (!games.length) {
+          gamesBody.innerHTML =
+            '<div class="note">Šobrīd nav atvērtu spēļu.' +
+            metaLine(data) +
+            "</div>";
+          return;
+        }
+
+        const cards = games
+          .map((g) => {
+            const title = pickTitle(g);
+            const fields = Object.entries(g)
+              .filter(
+                ([k, v]) =>
+                  k !== "url" &&
+                  !PRIMARY_KEYS.includes(k.toLowerCase()) &&
+                  v !== "" &&
+                  v != null
+              )
+              .map(
+                ([k, v]) =>
+                  '<span class="field"><b>' +
+                  escapeHtml(prettyKey(k)) +
+                  ":</b> " +
+                  escapeHtml(String(v)) +
+                  "</span>"
+              )
+              .join("");
+
+            const inner =
+              '<div class="title">' +
+              escapeHtml(title) +
+              '</div><div class="fields">' +
+              fields +
+              "</div>";
+
+            return g.url
+              ? '<a class="game" href="' +
+                  escapeAttr(g.url) +
+                  '" target="_blank" rel="noopener">' +
+                  inner +
+                  "</a>"
+              : '<div class="game">' + inner + "</div>";
+          })
+          .join("");
+
+        gamesBody.innerHTML =
+          '<div class="games">' + cards + "</div>" + metaLine(data);
+      }
+
+      function metaLine(data) {
+        if (!data || !data.updated) return "";
+        let when = data.updated;
+        try {
+          when = new Date(data.updated).toLocaleTimeString("lv-LV");
+        } catch (_) {}
+        let s = '<div class="note" style="margin-top:12px">Atjaunināts ' + when;
+        if (data.stale) s += " (novecojuši dati — avots nesasniedzams)";
+        else if (data.cached) s += " (no keša)";
+        return s + "</div>";
+      }
+
+      function pickTitle(g) {
+        for (const k of PRIMARY_KEYS) {
+          const hit = Object.keys(g).find((kk) => kk.toLowerCase() === k);
+          if (hit && g[hit]) return String(g[hit]);
+        }
+        const first = Object.entries(g).find(
+          ([k, v]) => k !== "url" && typeof v === "string" && v.trim()
+        );
+        return first ? String(first[1]) : "Spēle";
+      }
+
+      function prettyKey(k) {
+        return k.replace(/_/g, " ").replace(/^\w/, (c) => c.toUpperCase());
+      }
+
+      document
+        .getElementById("games-refresh")
+        .addEventListener("click", loadGames);
+      loadGames();
+      if (GAMES_AUTO_REFRESH_MS > 0) {
+        setInterval(loadGames, GAMES_AUTO_REFRESH_MS);
+      }
+
+      // =====================================================================
+      // Palīgi
+      // =====================================================================
+      function escapeHtml(s) {
+        return String(s)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;");
+      }
+      function escapeAttr(s) {
+        return escapeHtml(s).replace(/"/g, "&quot;");
+      }
+    </script>
+  </body>
+</html>
