@@ -46,6 +46,7 @@
       }
 
       .wrap {
+        position: relative;
         max-width: 1100px;
         margin: 0 auto;
         padding: 40px 24px 64px;
@@ -470,10 +471,214 @@
         border-color: var(--accent);
         color: var(--accent);
       }
+
+      /* --- Auth josla --- */
+      .authbar {
+        position: absolute;
+        top: 16px;
+        right: 22px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 13px;
+        z-index: 5;
+      }
+
+      .authbar .who {
+        color: var(--muted);
+        max-width: 210px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .auth-btn {
+        background: var(--bg-elev);
+        border: 1px solid var(--border);
+        color: var(--text);
+        border-radius: 9px;
+        padding: 6px 12px;
+        font-size: 13px;
+        font-weight: 500;
+        cursor: pointer;
+        white-space: nowrap;
+      }
+
+      .auth-btn:hover {
+        border-color: var(--accent);
+        color: var(--accent);
+      }
+
+      /* --- Pieslēgšanās logs --- */
+      .overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(5, 8, 13, 0.72);
+        backdrop-filter: blur(4px);
+        display: grid;
+        place-items: center;
+        z-index: 50;
+        padding: 20px;
+      }
+
+      .overlay[hidden] {
+        display: none;
+      }
+
+      .login {
+        width: 100%;
+        max-width: 380px;
+        background: var(--bg-soft);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 28px 24px;
+        box-shadow: var(--shadow);
+        text-align: center;
+      }
+
+      .login h3 {
+        margin: 0 0 8px;
+        font-size: 21px;
+      }
+
+      .login p {
+        margin: 0 0 18px;
+        color: var(--muted);
+        font-size: 14px;
+        line-height: 1.5;
+      }
+
+      .login input {
+        width: 100%;
+        box-sizing: border-box;
+        background: var(--bg-elev);
+        border: 1px solid var(--border);
+        color: var(--text);
+        border-radius: 10px;
+        padding: 12px 13px;
+        font-size: 14px;
+        outline: none;
+        margin-bottom: 10px;
+      }
+
+      .login input:focus {
+        border-color: var(--accent);
+      }
+
+      .login button.primary {
+        width: 100%;
+        background: var(--accent);
+        color: #08101d;
+        border: none;
+        border-radius: 10px;
+        padding: 12px;
+        font-size: 14px;
+        font-weight: 700;
+        cursor: pointer;
+      }
+
+      .login button.primary:hover {
+        filter: brightness(1.08);
+      }
+
+      .login .msg {
+        min-height: 18px;
+        margin-top: 12px;
+        font-size: 13px;
+        color: var(--muted);
+      }
+
+      .login .skip {
+        display: inline-block;
+        margin-top: 14px;
+        color: var(--muted);
+        font-size: 13px;
+        text-decoration: underline;
+        cursor: pointer;
+        background: none;
+        border: none;
+      }
+
+      .login .skip:hover {
+        color: var(--text);
+      }
+
+      /* --- Saišu rediģēšana --- */
+      .link-wrap {
+        position: relative;
+      }
+
+      .link-wrap .tile-del {
+        position: absolute;
+        top: -6px;
+        right: -6px;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background: var(--danger);
+        color: #fff;
+        border: 2px solid var(--bg-soft);
+        font-size: 11px;
+        line-height: 1;
+        cursor: pointer;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+      }
+
+      .link-wrap:hover .tile-del {
+        display: flex;
+      }
+
+      .link-add {
+        display: flex;
+        gap: 8px;
+        margin-top: 12px;
+        flex-wrap: wrap;
+      }
+
+      .link-add[hidden] {
+        display: none;
+      }
+
+      .link-add input {
+        flex: 1;
+        min-width: 90px;
+        background: var(--bg-elev);
+        border: 1px solid var(--border);
+        color: var(--text);
+        border-radius: 9px;
+        padding: 9px 11px;
+        font-size: 13px;
+        outline: none;
+      }
+
+      .link-add input:focus {
+        border-color: var(--accent);
+      }
+
+      .link-add .la-icon {
+        flex: 0 0 52px;
+        min-width: 0;
+        text-align: center;
+      }
+
+      .link-add button {
+        background: var(--accent);
+        color: #08101d;
+        border: none;
+        border-radius: 9px;
+        padding: 0 14px;
+        font-weight: 700;
+        font-size: 13px;
+        cursor: pointer;
+      }
     </style>
   </head>
   <body>
     <div class="wrap">
+      <div id="authbar" class="authbar"></div>
       <header>
         <div id="clock">--:--</div>
         <div id="date"></div>
@@ -483,8 +688,23 @@
       <div class="grid">
         <!-- Saites -->
         <section class="card">
-          <h2>Saites</h2>
+          <h2>
+            Saites
+            <button class="refresh" id="link-add-btn" hidden>＋ Saite</button>
+          </h2>
           <nav class="links" id="links"></nav>
+          <div class="link-add" id="link-add" hidden>
+            <input id="la-name" placeholder="Nosaukums" autocomplete="off" />
+            <input id="la-url" placeholder="adrese.lv" autocomplete="off" />
+            <input
+              id="la-icon"
+              class="la-icon"
+              placeholder="😀"
+              maxlength="2"
+              autocomplete="off"
+            />
+            <button id="la-save">Pievienot</button>
+          </div>
         </section>
 
         <!-- To-do -->
@@ -518,11 +738,35 @@
       </div>
     </div>
 
+    <!-- Pieslēgšanās logs (maģiskā saite e-pastā) -->
+    <div id="login-overlay" class="overlay" hidden>
+      <div class="login">
+        <h3>Pieslēdzies</h3>
+        <p>
+          Ievadi e-pastu — atsūtīsim pieslēgšanās saiti. Pēc tam tavi uzdevumi
+          un saites būs pieejami visās iekārtās.
+        </p>
+        <input
+          id="login-email"
+          type="email"
+          placeholder="tavs@epasts.lv"
+          autocomplete="email"
+        />
+        <button id="login-send" class="primary">Nosūtīt pieslēgšanās saiti</button>
+        <div id="login-msg" class="msg"></div>
+        <button id="login-skip" class="skip">Turpināt bez pieslēgšanās</button>
+      </div>
+    </div>
+
+    <!-- Supabase klients (UMD). Ja neielādējas, lapa strādā lokālā režīmā. -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
       // =====================================================================
       // Konfigurācija — pielāgo šeit
       // =====================================================================
-      const LINKS = [
+      // Noklusētās saites. Kad esi pieslēdzies, saites glabājas Supabase un ir
+      // rediģējamas no lapas; šīs tiek ieliktas datubāzē pirmajā pieslēgšanās reizē.
+      const DEFAULT_LINKS = [
         { name: "GNL LT", url: "https://lt.gnl.lv/applications", icon: "🎯" },
         { name: "Gmail", url: "https://mail.google.com", icon: "✉️" },
         { name: "Kalendārs", url: "https://calendar.google.com", icon: "📅" },
@@ -597,52 +841,286 @@
       setInterval(tick, 1000);
 
       // =====================================================================
-      // Saites
+      // Supabase: konfigurācija un pieslēgšanās (e-pasta maģiskā saite)
       // =====================================================================
-      (function renderLinks() {
-        const el = document.getElementById("links");
-        el.innerHTML = LINKS.map((l) => {
-          const ico = l.icon
-            ? l.icon
-            : (l.name || "?").trim().charAt(0).toUpperCase();
-          return (
-            '<a href="' +
-            escapeAttr(l.url) +
-            '"><span class="ico">' +
-            escapeHtml(ico) +
+      let sb = null; // Supabase klients (vai null → lokālais režīms)
+      let user = null; // pieslēgtais lietotājs (vai null)
+      const SKIP_KEY = "dashboard.skipLogin";
+
+      // "Mākoņa" režīms = ir klients UN esi pieslēdzies. Tad dati iet uz Supabase;
+      // citādi dati glabājas lokāli pārlūkā (localStorage / noklusētās saites).
+      function cloud() {
+        return !!(sb && user);
+      }
+
+      const authbar = document.getElementById("authbar");
+      const overlay = document.getElementById("login-overlay");
+      const emailEl = document.getElementById("login-email");
+      const loginMsg = document.getElementById("login-msg");
+
+      async function initSupabase() {
+        try {
+          const resp = await fetch("/api/config", { cache: "no-store" });
+          if (!resp.ok) return;
+          const cfg = await resp.json();
+          if (cfg.url && cfg.anonKey && window.supabase) {
+            sb = window.supabase.createClient(cfg.url, cfg.anonKey);
+          }
+        } catch (_) {
+          sb = null;
+        }
+      }
+
+      async function boot() {
+        await initSupabase();
+        if (sb) {
+          sb.auth.onAuthStateChange((event, session) => {
+            if (event === "SIGNED_IN") localStorage.removeItem(SKIP_KEY);
+            user = session ? session.user : null;
+            updateAuthUI();
+            loadLinks();
+            loadTodos();
+          });
+          const { data } = await sb.auth.getSession();
+          user = data.session ? data.session.user : null;
+        }
+        updateAuthUI();
+        await Promise.all([loadLinks(), loadTodos()]);
+      }
+
+      function updateAuthUI() {
+        if (!sb) {
+          // Supabase nav nokonfigurēts — klusi strādājam lokāli.
+          authbar.innerHTML = "";
+          overlay.hidden = true;
+          return;
+        }
+        if (user) {
+          authbar.innerHTML =
+            '<span class="who">☁ ' +
+            escapeHtml(user.email || "pieslēdzies") +
             "</span>" +
-            escapeHtml(l.name || l.url) +
-            "</a>"
-          );
-        }).join("");
-      })();
+            '<button id="logout-btn" class="auth-btn">Iziet</button>';
+          document
+            .getElementById("logout-btn")
+            .addEventListener("click", () => sb.auth.signOut());
+          overlay.hidden = true;
+        } else {
+          authbar.innerHTML =
+            '<button id="login-open" class="auth-btn">☁ Pieslēgties</button>';
+          document.getElementById("login-open").addEventListener("click", () => {
+            localStorage.removeItem(SKIP_KEY);
+            showOverlay();
+          });
+          if (localStorage.getItem(SKIP_KEY)) overlay.hidden = true;
+          else showOverlay();
+        }
+      }
+
+      function showOverlay() {
+        overlay.hidden = false;
+        loginMsg.textContent = "";
+        emailEl.focus();
+      }
+
+      async function sendMagicLink() {
+        const email = emailEl.value.trim();
+        if (!email || !sb) return;
+        loginMsg.textContent = "Sūta…";
+        const { error } = await sb.auth.signInWithOtp({
+          email,
+          options: { emailRedirectTo: location.origin },
+        });
+        loginMsg.textContent = error
+          ? "Kļūda: " + error.message
+          : "Pārbaudi e-pastu — nosūtījām pieslēgšanās saiti ✉️";
+      }
+
+      document
+        .getElementById("login-send")
+        .addEventListener("click", sendMagicLink);
+      emailEl.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") sendMagicLink();
+      });
+      document.getElementById("login-skip").addEventListener("click", (e) => {
+        e.preventDefault();
+        localStorage.setItem(SKIP_KEY, "1");
+        overlay.hidden = true;
+      });
+
+      // Atgriežoties cilnē, palasām svaigus datus (sinhronizācija starp iekārtām).
+      document.addEventListener("visibilitychange", () => {
+        if (!document.hidden && cloud()) {
+          loadLinks();
+          loadTodos();
+        }
+      });
 
       // =====================================================================
-      // To-do (glabājas pārlūkā ar localStorage)
+      // Saites (Supabase, kad pieslēdzies; citādi noklusētās, tikai lasāmas)
+      // =====================================================================
+      const linksEl = document.getElementById("links");
+      const linkAddBtn = document.getElementById("link-add-btn");
+      const linkAddForm = document.getElementById("link-add");
+      let links = DEFAULT_LINKS.slice();
+
+      function renderLinks() {
+        const editable = cloud();
+        linkAddBtn.hidden = !editable;
+        if (!editable) linkAddForm.hidden = true;
+
+        linksEl.innerHTML = links
+          .map((l) => {
+            const ico = l.icon
+              ? l.icon
+              : (l.name || "?").trim().charAt(0).toUpperCase();
+            const del =
+              editable && l.id
+                ? '<button class="tile-del" data-link="' +
+                  escapeAttr(l.id) +
+                  '" title="Dzēst saiti">✕</button>'
+                : "";
+            return (
+              '<div class="link-wrap">' +
+              '<a href="' +
+              escapeAttr(l.url) +
+              '" target="_blank" rel="noopener"><span class="ico">' +
+              escapeHtml(ico) +
+              "</span>" +
+              escapeHtml(l.name || l.url) +
+              "</a>" +
+              del +
+              "</div>"
+            );
+          })
+          .join("");
+      }
+
+      async function loadLinks() {
+        if (cloud()) {
+          const { data, error } = await sb
+            .from("links")
+            .select("id,name,url,icon")
+            .order("created_at", { ascending: true });
+          links = error ? [] : data;
+          if (!error && data.length === 0) await seedLinks();
+        } else {
+          links = DEFAULT_LINKS.slice();
+        }
+        renderLinks();
+      }
+
+      // Pirmajā pieslēgšanās reizē ieliekam noklusētās saites datubāzē.
+      async function seedLinks() {
+        const key = "dashboard.seeded." + (user ? user.id : "");
+        if (localStorage.getItem(key)) return;
+        try {
+          const { data } = await sb
+            .from("links")
+            .insert(
+              DEFAULT_LINKS.map((l) => ({
+                name: l.name,
+                url: l.url,
+                icon: l.icon || null,
+              }))
+            )
+            .select("id,name,url,icon");
+          if (data) links = data;
+          localStorage.setItem(key, "1");
+        } catch (_) {
+          /* ignorējam */
+        }
+      }
+
+      async function addLink() {
+        const name = document.getElementById("la-name").value.trim();
+        let url = document.getElementById("la-url").value.trim();
+        const icon = document.getElementById("la-icon").value.trim();
+        if (!name || !url) return;
+        if (!/^https?:\/\//i.test(url)) url = "https://" + url;
+        const row = { name, url, icon: icon || null };
+        if (cloud()) {
+          const { data, error } = await sb
+            .from("links")
+            .insert(row)
+            .select("id,name,url,icon")
+            .single();
+          if (!error && data) links.push(data);
+        } else {
+          links.push({ id: uuid(), ...row });
+        }
+        document.getElementById("la-name").value = "";
+        document.getElementById("la-url").value = "";
+        document.getElementById("la-icon").value = "";
+        linkAddForm.hidden = true;
+        renderLinks();
+      }
+
+      async function deleteLink(id) {
+        links = links.filter((l) => String(l.id) !== String(id));
+        renderLinks();
+        if (cloud()) await sb.from("links").delete().eq("id", id);
+      }
+
+      linkAddBtn.addEventListener("click", () => {
+        linkAddForm.hidden = !linkAddForm.hidden;
+        if (!linkAddForm.hidden) document.getElementById("la-name").focus();
+      });
+      document.getElementById("la-save").addEventListener("click", addLink);
+      linkAddForm.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") addLink();
+      });
+      linksEl.addEventListener("click", (e) => {
+        if (e.target.matches(".tile-del")) {
+          e.preventDefault();
+          deleteLink(e.target.getAttribute("data-link"));
+        }
+      });
+
+      // =====================================================================
+      // Darāmais (Supabase, kad pieslēdzies; citādi lokāli pārlūkā)
       // =====================================================================
       const STORE_KEY = "dashboard.todos.v1";
       const listEl = document.getElementById("todo-list");
       const countEl = document.getElementById("todo-count");
       const inputEl = document.getElementById("todo-text");
+      let todos = [];
 
-      let todos = loadTodos();
-
-      function loadTodos() {
+      function loadLocalTodos() {
         try {
           const raw = localStorage.getItem(STORE_KEY);
-          const parsed = raw ? JSON.parse(raw) : [];
-          return Array.isArray(parsed) ? parsed : [];
+          const arr = raw ? JSON.parse(raw) : [];
+          return Array.isArray(arr)
+            ? arr.map((t) => ({
+                id: t.id || uuid(),
+                text: t.text,
+                done: !!t.done,
+              }))
+            : [];
         } catch (_) {
           return [];
         }
       }
 
-      function saveTodos() {
+      function saveLocalTodos() {
         try {
           localStorage.setItem(STORE_KEY, JSON.stringify(todos));
         } catch (_) {
           /* privātais režīms u.tml. — klusi ignorējam */
         }
+      }
+
+      async function loadTodos() {
+        if (cloud()) {
+          const { data, error } = await sb
+            .from("todos")
+            .select("id,text,done")
+            .order("created_at", { ascending: true });
+          todos = error ? [] : data;
+        } else {
+          todos = loadLocalTodos();
+        }
+        renderTodos();
       }
 
       function renderTodos() {
@@ -655,56 +1133,82 @@
         }
         listEl.innerHTML = todos
           .map(
-            (t, i) =>
+            (t) =>
               '<li class="' +
               (t.done ? "done" : "") +
               '">' +
-              '<input type="checkbox" data-i="' +
-              i +
+              '<input type="checkbox" data-id="' +
+              escapeAttr(t.id) +
               '"' +
               (t.done ? " checked" : "") +
               " />" +
               '<span class="txt">' +
               escapeHtml(t.text) +
               "</span>" +
-              '<button class="del" data-i="' +
-              i +
+              '<button class="del" data-id="' +
+              escapeAttr(t.id) +
               '" title="Dzēst">✕</button>' +
               "</li>"
           )
           .join("");
       }
 
-      function addTodo() {
+      async function addTodo() {
         const text = inputEl.value.trim();
         if (!text) return;
-        todos.push({ text, done: false });
         inputEl.value = "";
-        saveTodos();
+        if (cloud()) {
+          const { data, error } = await sb
+            .from("todos")
+            .insert({ text })
+            .select("id,text,done")
+            .single();
+          if (!error && data) {
+            todos.push(data);
+            renderTodos();
+          }
+        } else {
+          todos.push({ id: uuid(), text, done: false });
+          saveLocalTodos();
+          renderTodos();
+        }
+      }
+
+      async function toggleTodo(id) {
+        const t = todos.find((x) => String(x.id) === String(id));
+        if (!t) return;
+        t.done = !t.done;
         renderTodos();
+        if (cloud()) await sb.from("todos").update({ done: t.done }).eq("id", id);
+        else saveLocalTodos();
+      }
+
+      async function deleteTodo(id) {
+        todos = todos.filter((x) => String(x.id) !== String(id));
+        renderTodos();
+        if (cloud()) await sb.from("todos").delete().eq("id", id);
+        else saveLocalTodos();
       }
 
       document.getElementById("todo-add").addEventListener("click", addTodo);
       inputEl.addEventListener("keydown", (e) => {
         if (e.key === "Enter") addTodo();
       });
-
       listEl.addEventListener("click", (e) => {
-        const i = e.target.getAttribute("data-i");
-        if (i === null) return;
-        const idx = Number(i);
-        if (e.target.matches(".del")) {
-          todos.splice(idx, 1);
-        } else if (e.target.matches('input[type="checkbox"]')) {
-          todos[idx].done = !todos[idx].done;
-        } else {
-          return;
-        }
-        saveTodos();
-        renderTodos();
+        const id = e.target.getAttribute("data-id");
+        if (!id) return;
+        if (e.target.matches(".del")) deleteTodo(id);
+        else if (e.target.matches('input[type="checkbox"]')) toggleTodo(id);
       });
 
-      renderTodos();
+      function uuid() {
+        return crypto && crypto.randomUUID
+          ? crypto.randomUUID()
+          : "id-" + Date.now() + "-" + Math.random().toString(16).slice(2);
+      }
+
+      // Startējam visu.
+      boot();
 
       // =====================================================================
       // Spēles no /api/games
